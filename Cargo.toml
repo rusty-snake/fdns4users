@@ -1,0 +1,11 @@
+[package]
+name = "fdns4users"
+version = "0.1.0"
+authors = ["rusty-snake"]
+edition = "2018"
+description = "Allow unprivileged users to start fdns."
+repository = "https://github.com/rusty-snake/fdns4users"
+license = "BSD-2-Clause"
+
+[dependencies]
+libc = "0.2"
