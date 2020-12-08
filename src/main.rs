@@ -35,8 +35,26 @@ fn main() {
         assert!(libc::seteuid(libc::getuid()) == 0);
     }
 
-    let mut args = env::args().skip(1);
+    let (proxy_addr, fdns_args) = parse_and_valided_args(&mut env::args().skip(1));
 
+    // set real, effective and saved UID and GID to root
+    unsafe {
+        assert!(libc::setresuid(0, 0, 0) == 0);
+        assert!(libc::setresgid(0, 0, 0) == 0);
+    }
+
+    // start fdns
+    Command::new(FDNS)
+        .arg(&proxy_addr)
+        .args(&fdns_args)
+        .env_clear()
+        .spawn()
+        .expect("Failed to start fdns")
+        .wait()
+        .unwrap();
+}
+
+fn parse_and_valided_args<T: Iterator<Item = String>>(args: &mut T) -> (String, Vec<String>) {
     // validate first commandline arg (--proxy-addr)
     let proxy_addr = {
         let arg = args
@@ -63,19 +81,5 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    // set real, effective and saved UID and GID to root
-    unsafe {
-        assert!(libc::setresuid(0, 0, 0) == 0);
-        assert!(libc::setresgid(0, 0, 0) == 0);
-    }
-
-    // start fdns
-    Command::new(FDNS)
-        .arg(&proxy_addr)
-        .args(&fdns_args)
-        .env_clear()
-        .spawn()
-        .expect("Failed to start fdns")
-        .wait()
-        .unwrap();
+    (proxy_addr, fdns_args)
 }
