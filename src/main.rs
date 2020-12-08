@@ -35,9 +35,26 @@ fn main() {
         assert!(libc::seteuid(libc::getuid()) == 0);
     }
 
-    // parse commandline args, skip arg0 and keep only '--whitelist=[A-Za-z0-9.-]*'
-    let fdns_args = env::args()
-        .skip(1)
+    let mut args = env::args().skip(1);
+
+    // validate first commandline arg (--proxy-addr)
+    let proxy_addr = {
+        let arg = args
+            .next()
+            .expect("No command-line arguments given. --proxy-addr must be given.");
+        if arg.starts_with("--proxy-addr=127.70.74.")
+            && arg[23..].chars().all(|c| c.is_ascii_digit())
+            && 24 <= arg.len()
+            && arg.len() <= 26
+        {
+            arg
+        } else {
+            panic!("Invalid first argument (--proxy-addr)");
+        }
+    };
+
+    // parse left over commandline args, keep only '--whitelist=[A-Za-z0-9.-]*'
+    let fdns_args = args
         .filter(|arg| {
             arg.starts_with("--whitelist=")
                 && arg[12..]
@@ -54,7 +71,7 @@ fn main() {
 
     // start fdns
     Command::new(FDNS)
-        .arg("--proxy-addr=127.70.74.68")
+        .arg(&proxy_addr)
         .args(&fdns_args)
         .env_clear()
         .spawn()
