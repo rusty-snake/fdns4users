@@ -1,4 +1,4 @@
-# fdns4users
+# fdns4users ![](https://badgen.net/badge/maintenance/experimental/orange)
 
 Allow unprivileged users to start fdns.
 
@@ -26,7 +26,7 @@ firejail --dns=127.70.74.68 wget "https://cdimage.debian.org/debian-cd/current/a
 
 ## Alternatives
 
-Instead of a own suid-exeutable you can use polkit or sudo.
+Instead of an own suid-exeutable you can use polkit or sudo.
 
 ### Example for sudo:
 
