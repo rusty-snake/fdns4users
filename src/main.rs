@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 rusty-snake
+ * Copyright © 2020,2021 rusty-snake
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,17 +25,21 @@
  */
 
 use std::env;
-use std::process::Command;
+use std::process::{exit, Command};
 
+/// The path to the fdns binary
 const FDNS: &str = "/usr/bin/fdns";
 
+/// The main function
+///
+/// Start [fdns](FDNS) as root with the arguments returned by [`parse_and_validate_args`].
 fn main() {
     // Defense in Depth: set the effetive-UID to the real-UID
     unsafe {
         assert!(libc::seteuid(libc::getuid()) == 0);
     }
 
-    let (proxy_addr, fdns_args) = parse_and_valided_args(&mut env::args().skip(1));
+    let (proxy_addr, fdns_args) = parse_and_validate_args(&mut env::args().skip(1));
 
     // set real, effective and saved UID and GID to root
     unsafe {
@@ -54,32 +58,71 @@ fn main() {
         .unwrap();
 }
 
-fn parse_and_valided_args<T: Iterator<Item = String>>(args: &mut T) -> (String, Vec<String>) {
+/// Parse and validate the arguments
+///
+/// The first argument must be `--proxy-addr=127.70.74.[0-9]{1,3}` or `--help`.
+/// All other arguments are optional. Currently supported are `--blocklist=[A-Za-z0-9._-]+` and
+/// `--whitelist=[A-Za-z0-9._-]+` in any order and number.
+fn parse_and_validate_args<T: Iterator<Item = String>>(args: &mut T) -> (String, Vec<String>) {
     // validate first commandline arg (--proxy-addr)
     let proxy_addr = {
-        let arg = args
+        let arg_1 = args
             .next()
             .expect("No command-line arguments given. --proxy-addr must be given.");
-        if arg.starts_with("--proxy-addr=127.70.74.")
-            && arg[23..].chars().all(|c| c.is_ascii_digit())
-            && 24 <= arg.len()
-            && arg.len() <= 26
+
+        if arg_1 == "--help" {
+            help()
+        }
+
+        if arg_1.starts_with("--proxy-addr=127.70.74.")
+            && arg_1[23..].chars().all(|c| c.is_ascii_digit())
+            && 24 <= arg_1.len()
+            && arg_1.len() <= 26
         {
-            arg
+            arg_1
         } else {
-            panic!("Invalid first argument (--proxy-addr)");
+            panic!(
+                "Invalid first argument, must be --help or --proxy-addr with a allowed IP-address."
+            );
         }
     };
 
-    // parse left over commandline args, keep only '--whitelist=[A-Za-z0-9.-]*'
+    // parse left over commandline args, keep only '--whitelist=[A-Za-z0-9._-]*'
+    // and '--blocklist=[A-Za-z0-9._-]*'
     let fdns_args = args
         .filter(|arg| {
-            arg.starts_with("--whitelist=")
+            (arg.starts_with("--blocklist=") || arg.starts_with("--whitelist="))
                 && arg[12..]
                     .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+                    .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-' || c == '_')
         })
         .collect::<Vec<_>>();
 
     (proxy_addr, fdns_args)
+}
+
+/// Show help and exit
+fn help() -> ! {
+    unsafe {
+        let uid = libc::getuid();
+        assert!(libc::setresuid(uid, uid, uid) == 0);
+    }
+
+    print!(
+        "{} {} -- {}
+
+USAGE:
+    {0} --help
+    {0} --proxy-addr=127.70.74.<DIGITS> [OPTIONS]
+
+OPTIONS:
+    --blocklist=<DOMAIN>
+    --whitelist=<DOMAIN>
+",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_DESCRIPTION"),
+    );
+
+    exit(0);
 }

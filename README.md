@@ -22,7 +22,7 @@ fdns4users --proxy-addr=127.70.74.68 --whitelist=debian.org &
 firejail --dns=127.70.74.68 wget "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.6.0-amd64-netinst.iso"
 ```
 
-`--proxy-addr` must be the first argument and only use `127.70.74.*`.
+`--proxy-addr` must be the first argument and start with `127.70.74.`.
 
 ## Alternatives
 
@@ -53,9 +53,10 @@ polkit.addRule(function(action, subject) {
 
     const IP = "127\\.70\\.74\\.[0-9]{1,3}";
     const PROXY_ADDR = `--proxy-addr=${IP}`;
+    const BLOCKLIST = `--blocklist=[A-Za-z0-9._-]+`;
     const WHITELIST = `--whitelist=[A-Za-z0-9._-]+`;
-    const ZOM_WHITELIST = `( ${WHITELIST})*`;
-    const RE = new RegExp(`^${PROGRAM} ${PROXY_ADDR}${ZOM_WHITELIST}$`);
+    const ZOM_BWLIST = `( ${WHITELIST}| ${BLOCKLIST})*`;
+    const RE = new RegExp(`^${PROGRAM} ${PROXY_ADDR}${ZOM_BWLIST}$`);
 
     // Debugging: uncomment to see the final RegExp
     //polkit.log(RE.toString());
@@ -70,12 +71,12 @@ polkit.addRule(function(action, subject) {
 ```
 
 This allows the user john to start `/usr/bin/fdns --proxy-addr=127.70.68.*` with
-`--whitelist=DOMAIN1`, `--whitelist=DOMAIN2`, ….
+`--whitelist=example1.com`, `--whitelist=example2.com`, `--blocklist=example3.com` ….
 
 ## License
 
 ```
-Copyright © 2020 rusty-snake
+Copyright © 2020,2021 rusty-snake
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
