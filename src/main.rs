@@ -82,7 +82,7 @@ fn parse_and_validate_args<T: Iterator<Item = String>>(args: &mut T) -> (String,
             arg_1
         } else {
             panic!(
-                "Invalid first argument, must be --help or --proxy-addr with a allowed IP-address."
+                "Invalid first Argument. It must be --help or --proxy-addr=127.70.74.*."
             );
         }
     };
