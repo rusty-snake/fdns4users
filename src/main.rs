@@ -25,6 +25,7 @@
  */
 
 use std::env;
+use std::os::unix::process::CommandExt;
 use std::process::{exit, Command};
 
 /// The path to the fdns binary
@@ -48,14 +49,13 @@ fn main() {
     }
 
     // start fdns
-    Command::new(FDNS)
+    let err = Command::new(FDNS)
         .arg(&proxy_addr)
         .args(&fdns_args)
         .env_clear()
-        .spawn()
-        .expect("Failed to start fdns")
-        .wait()
-        .unwrap();
+        .exec();  // Returns only if execve fails.
+
+    eprintln!("Failed to start fdns: {}", err);
 }
 
 /// Parse and validate the arguments
