@@ -28,7 +28,7 @@ firejail --dns=127.70.74.68 wget "https://cdimage.debian.org/debian-cd/current/a
 
 Instead of an own suid-exeutable you can use polkit or sudo.
 
-### Example for sudo:
+### Example for sudo
 
 Attention:
  - Only edit sudoers if you know what you do!
