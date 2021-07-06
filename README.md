@@ -1,4 +1,4 @@
-# fdns4users [![maintenance-status: experimental (as of 2021-01-08)](https://img.shields.io/badge/maintenance--status-experimental_%28as_of_2021--01--08%29-orange)](https://gist.github.com/rusty-snake/574a91f1df9f97ec77ca308d6d731e29)
+# fdns4users [![maintenance-status: as-is (as of 2021-07-06)](https://img.shields.io/badge/maintenance--status-as--is_%28as_of_2021--07--06%29-yellow)](https://gist.github.com/rusty-snake/574a91f1df9f97ec77ca308d6d731e29)
 
 Allow unprivileged users to start fdns.
 
